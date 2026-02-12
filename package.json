@@ -1,0 +1,19 @@
+{
+  "name": "animora",
+  "version": "1.0.0",
+  "description": "A lightweight JavaScript animation framework",
+  "main": "dist/animora.js",
+  "scripts": {
+    "build": "echo \"Building Animora...\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lutub/animora.git"
+  },
+  "author": "Lutub",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lutub/animora/issues"
+  },
+  "homepage": "https://github.com/Lutub/animora#readme"
+}
