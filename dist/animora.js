@@ -89,7 +89,12 @@
         const initialBgColor = backgroundColor ? parseColor(getComputedStyle(el).backgroundColor) : undefined;
         const initialColor = color ? parseColor(getComputedStyle(el).color) : undefined;
 
-        const startTime = performance.now() + delay;
+        const targetBgColor = backgroundColor ? parseColor(backgroundColor) : null;
+const targetTextColor = color ? parseColor(color) : null;
+
+        let startTime = performance.now() + delay;
+let direction = 1; // 1 = forward, -1 = backward
+
         let cycles = 0;
 
         addAnimation({
@@ -97,8 +102,14 @@
           update(time) {
             if (time < startTime) return;
 
-            let progress = clamp((time - startTime) / duration);
-            let eased = easings[ease] ? easings[ease](progress) : progress;
+            let raw = (time - startTime) / duration;
+let progress = clamp(raw);
+
+if (direction === -1) {
+  progress = 1 - progress;
+}
+
+let eased = easings[ease] ? easings[ease](progress) : progress;
 
             // Keyframes
             if (keyframes) {
@@ -139,46 +150,42 @@
               if (opacity !== undefined && initialOpacity !== undefined)
                 el.style.opacity = lerp(initialOpacity, opacity, eased);
 
-              if (backgroundColor && initialBgColor) {
-                const c = lerpColor(initialBgColor, parseColor(backgroundColor), eased);
-                el.style.backgroundColor = `rgb(${c.join(',')})`;
-              }
+              if (backgroundColor && initialBgColor && targetBgColor) {
+  const c = lerpColor(initialBgColor, targetBgColor, eased);
+  el.style.backgroundColor = `rgb(${c.join(',')})`;
+}
 
-              if (color && initialColor) {
-                const c = lerpColor(initialColor, parseColor(color), eased);
-                el.style.color = `rgb(${c.join(',')})`;
-              }
+if (color && initialColor && targetTextColor) {
+  const c = lerpColor(initialColor, targetTextColor, eased);
+  el.style.color = `rgb(${c.join(',')})`;
+}
+
             }
 
             if (onUpdate) onUpdate(eased);
 
             // Check complete
-            if (progress >= 1) {
-              if (cycles < repeat) {
-                cycles++;
-                if (yoyo) {
-                  if (keyframes) {
-                    // swap frames for yoyo
-                    // optional: implement if needed
-                  } else {
-                    [startValues.x, targetValues.x] = [targetValues.x, startValues.x];
-                    [startValues.y, targetValues.y] = [targetValues.y, startValues.y];
-                    [startValues.z, targetValues.z] = [targetValues.z, startValues.z];
-                    [startValues.scale, targetValues.scale] = [targetValues.scale, startValues.scale];
-                    [startValues.rotate, targetValues.rotate] = [targetValues.rotate, startValues.rotate];
-                    [startValues.skewX, targetValues.skewX] = [targetValues.skewX, startValues.skewX];
-                    [startValues.skewY, targetValues.skewY] = [targetValues.skewY, startValues.skewY];
-                  }
-                }
-                this.startTime = performance.now();
-                return;
-              }
+            if (raw >= 1) {
 
-              if (savePos && !keyframes) positionStore.set(el, targetValues);
+  if (cycles < repeat) {
+    cycles++;
 
-              this.done = true;
-              if (onComplete) onComplete();
-            }
+    if (yoyo) {
+      direction *= -1; // Richtung umdrehen
+    }
+
+    startTime = performance.now() + delay; // korrekt resetten
+    return;
+  }
+
+  if (savePos && !keyframes) {
+    positionStore.set(el, direction === 1 ? targetValues : startValues);
+  }
+
+  this.done = true;
+  if (onComplete) onComplete();
+}
+
           }
         });
 
